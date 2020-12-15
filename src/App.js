@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import TodoForm from './components/TodoForm';
 import TodoList from './components/TodoList';
 
 function App () {
@@ -19,8 +20,22 @@ function App () {
     setTodoList (newTodoList);
   }
 
+  function handleTodoFormSubmit (formValues) {
+    // console.log (formValues.title);
+
+    // add new todo to current todo list
+    const newTodoList = [...todoList];
+    const newTodo = {
+      id: newTodoList.length + 1,
+      ...formValues,
+    };
+    newTodoList.push (newTodo);
+    setTodoList (newTodoList);
+  }
+
   return (
     <div className="App">
+      <TodoForm onSubmit={handleTodoFormSubmit} />
       <TodoList todos={todoList} onTodoClick={handleTodoClick} />
     </div>
   );
