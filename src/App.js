@@ -1,4 +1,6 @@
 import {useState, useEffect} from 'react';
+import queryString from 'query-string';
+import Pagination from './components/Pagination';
 import PostList from './components/PostList';
 import TodoForm from './components/TodoForm';
 import TodoList from './components/TodoList';
@@ -9,8 +11,16 @@ function App () {
     {id: 2, title: 'Todo 2'},
     {id: 3, title: 'Todo 3'},
   ]);
-
   const [postList, setPostList] = useState ([]);
+  const [pagination, setPagination] = useState ({
+    _page: 1,
+    _limit: 10,
+    _totalRows: 11,
+  });
+  const [filters, setFilters] = useState ({
+    _limit: 10,
+    _page: 1,
+  });
 
   function handleTodoClick (todo) {
     // console.log (todo);
@@ -33,32 +43,45 @@ function App () {
     setTodoList (newTodoList);
   }
 
-  useEffect (() => {
-    async function fetchPostList () {
-      try {
-        const requestUrl =
-          'http://js-post-api.herokuapp.com/api/posts?_limit=10&_page=1';
-        const response = await fetch (requestUrl);
-        const responseJSON = await response.json ();
-        console.log ({responseJSON});
+  function handlePageChange (newPage) {
+    console.log (newPage);
+    setFilters ({
+      ...filters,
+      _page: newPage,
+    });
+  }
 
-        //lấy data từ responseJSON
-        const {data} = responseJSON; //destructuring assignment
-        // const data = responseJSON.data;
-        // console.log (data);
-        setPostList (data);
-      } catch (error) {
-        console.log ('Fail to fetch post list: ', error.message);
+  useEffect (
+    () => {
+      async function fetchPostList () {
+        try {
+          const paramsString = queryString.stringify (filters); //install them package query-string de su dung
+          const requestUrl = `http://js-post-api.herokuapp.com/api/posts?${paramsString}`;
+          const response = await fetch (requestUrl);
+          const responseJSON = await response.json ();
+          console.log ({responseJSON});
+
+          //lấy data từ responseJSON
+          const {data, pagination} = responseJSON; //destructuring assignment
+          // const data = responseJSON.data;
+          // console.log (data);
+          setPostList (data);
+          setPagination (pagination);
+        } catch (error) {
+          console.log ('Fail to fetch post list: ', error.message);
+        }
       }
-    }
-    fetchPostList ();
-  }, []);
+      fetchPostList ();
+    },
+    [filters]
+  );
 
   return (
     <div className="App">
       <PostList posts={postList} />
       {/* <TodoForm onSubmit={handleTodoFormSubmit} />
       <TodoList todos={todoList} onTodoClick={handleTodoClick} /> */}
+      <Pagination pagination={pagination} onPageChange={handlePageChange} />
     </div>
   );
 }
